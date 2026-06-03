@@ -11,7 +11,7 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { watch } from 'vue';
 import { useAuthStore } from './stores/auth';
 import { useSyncStore } from './stores/sync';
 import { useFleetStore } from './stores/fleet';
@@ -22,17 +22,14 @@ const auth = useAuthStore();
 const sync = useSyncStore();
 const fleet = useFleetStore();
 
-onMounted(async () => {
-  if (auth.isAuthenticated) {
+watch(() => auth.user, async (user) => {
+  if (user && !fleet.loaded) {
     await sync.init();
-    // Try to load fleet from IndexedDB immediately for offline support
-    if (!fleet.loaded) {
-      try {
-        await fleet.fetchAll();
-      } catch {
-        await fleet.loadFromIndexedDB();
-      }
+    try {
+      await fleet.fetchAll();
+    } catch {
+      await fleet.loadFromIndexedDB();
     }
   }
-});
+}, { immediate: true });
 </script>
