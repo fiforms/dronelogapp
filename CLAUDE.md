@@ -18,11 +18,22 @@ npm run dev              # Vite SPA at http://localhost:5173
 
 Local database: SQLite (`database/database.sqlite`). MySQL in production.
 
-Dev login: `pilot@example.com` / `password`
-
-Reset and re-seed everything:
+First-time setup (after clone or `migrate:fresh`):
 ```bash
-php artisan migrate:fresh --seed
+php artisan migrate
+php artisan user:create        # interactive: name, email, password
+```
+
+Reset the database completely:
+```bash
+php artisan migrate:fresh
+php artisan user:create
+```
+
+Change a password:
+```bash
+php artisan user:reset-password            # prompts for email
+php artisan user:reset-password you@email  # or pass email directly
 ```
 
 Build frontend for production:

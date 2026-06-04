@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\DefaultChecklistItem;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
@@ -34,23 +35,9 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->string('password')),
         ]);
 
-        // Every new user gets their own personal team automatically
         $team = Team::create(['name' => "{$user->name}'s Team"]);
         $team->users()->attach($user, ['role' => 'owner']);
-
-        // Seed the default pre-flight checklist for this team
-        $template = $team->checklistTemplates()->create([
-            'name'       => 'Standard Pre-Flight',
-            'is_default' => true,
-        ]);
-        foreach ([
-            'Weather Check: Wind speed, precipitation and visibility within limits',
-            'Equipment Check: Arms fully extended, propellers in visually good condition, gimbal clear of obstructions, battery secure.',
-            'Location Check: Acceptable visibility of flight area, flight path clear of obstructions',
-            'Clearance Check: Permitted to fly in airspace (LAANC check, no TFRs), and permitted to launch and control from launch location',
-        ] as $i => $label) {
-            $template->items()->create(['sort_order' => $i + 1, 'label' => $label]);
-        }
+        DefaultChecklistItem::seedTeam($team);
 
         event(new Registered($user));
 

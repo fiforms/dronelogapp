@@ -39,6 +39,12 @@ php artisan migrate --seed
 npm install
 ```
 
+Create your first user account:
+
+```bash
+php artisan user:create
+```
+
 Then start both dev servers:
 
 ```bash
@@ -46,9 +52,15 @@ php artisan serve   # API → http://localhost:8000
 npm run dev         # SPA → http://localhost:5173
 ```
 
-Visit `http://localhost:5173` and log in with:
-- **Email:** `pilot@example.com`
-- **Password:** `password`
+Visit `http://localhost:5173` and log in with the credentials you just created.
+
+### User management
+
+```bash
+php artisan user:create                      # create a new account
+php artisan user:reset-password              # reset a password (prompts for email)
+php artisan user:reset-password you@email    # reset a password (email as argument)
+```
 
 ---
 
@@ -60,10 +72,14 @@ Visit `http://localhost:5173` and log in with:
 4. Run:
    ```bash
    npm run build
-   php artisan migrate --force
+   php artisan migrate --seed --force
    php artisan config:cache && php artisan route:cache && php artisan view:cache
    ```
 5. Point nginx/Apache web root to `public/`
+6. Create your account:
+   ```bash
+   php artisan user:create
+   ```
 
 **HTTPS is required** for PWA install and the Geolocation API.
 

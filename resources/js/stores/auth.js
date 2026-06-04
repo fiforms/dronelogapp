@@ -31,7 +31,19 @@ export const useAuthStore = defineStore('auth', {
         },
 
         async logout() {
-            await axios.post('/logout');
+            // Wipe all local data so the next user starts clean
+            try {
+                const { db } = await import('../db');
+                await Promise.all(
+                    Object.values(db.tables).map(t => t.clear())
+                );
+            } catch {}
+            localStorage.clear();
+
+            try {
+                await axios.post('/logout');
+            } catch {}
+
             this.user = null;
         },
     },
