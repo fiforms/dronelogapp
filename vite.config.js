@@ -13,6 +13,8 @@ export default defineConfig({
         vue(),
         VitePWA({
             registerType: 'autoUpdate',
+            outDir: 'public',
+            base: '/',
             includeAssets: ['favicon.ico', 'icons/*.png'],
             manifest: {
                 name: 'DroneLog',
@@ -32,7 +34,19 @@ export default defineConfig({
             },
             workbox: {
                 globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+                clientsClaim: true,
+                skipWaiting: true,
+                navigateFallback: null,
                 runtimeCaching: [
+                    {
+                        // Cache the PHP-rendered HTML shell for offline navigation
+                        urlPattern: ({ request }) => request.mode === 'navigate',
+                        handler: 'NetworkFirst',
+                        options: {
+                            cacheName: 'app-shell-cache',
+                            networkTimeoutSeconds: 5,
+                        },
+                    },
                     {
                         urlPattern: /\/api\/v1\/(drones|batteries|accessories|checklist-templates)/,
                         handler: 'StaleWhileRevalidate',

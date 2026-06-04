@@ -1,10 +1,13 @@
 import './bootstrap';
 import '../css/app.css';
+import { registerSW } from 'virtual:pwa-register';
 
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import App from './App.vue';
 import router from './router';
+
+registerSW({ immediate: true });
 
 const app = createApp(App);
 

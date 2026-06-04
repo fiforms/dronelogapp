@@ -17,8 +17,17 @@ export const useAuthStore = defineStore('auth', {
             try {
                 const { data } = await axios.get('/api/user');
                 this.user = data;
-            } catch {
-                this.user = null;
+                localStorage.setItem('auth.user', JSON.stringify(data));
+            } catch (e) {
+                // Network failure while offline — keep the cached user so the
+                // router guard doesn't bounce an already-authenticated user to login.
+                if (!e.response) {
+                    const cached = localStorage.getItem('auth.user');
+                    this.user = cached ? JSON.parse(cached) : null;
+                } else {
+                    this.user = null;
+                    localStorage.removeItem('auth.user');
+                }
             } finally {
                 this.loading = false;
             }
