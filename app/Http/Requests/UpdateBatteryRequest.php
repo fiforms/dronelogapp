@@ -22,6 +22,7 @@ class UpdateBatteryRequest extends FormRequest
             'purchase_date' => ['nullable', 'date'],
             'cycle_count'   => ['nullable', 'integer', 'min:0'],
             'notes'         => ['nullable', 'string'],
+            'is_active'     => ['sometimes', 'boolean'],
         ];
     }
 }

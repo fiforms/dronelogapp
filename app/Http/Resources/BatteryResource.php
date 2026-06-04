@@ -21,6 +21,8 @@ class BatteryResource extends JsonResource
             'purchase_date' => $this->purchase_date?->toDateString(),
             'cycle_count'   => $this->cycle_count,
             'notes'         => $this->notes,
+            'is_active'     => $this->is_active,
+            'has_flights'   => ($this->flights_count ?? 0) > 0,
             'created_at'    => $this->created_at,
             'updated_at'    => $this->updated_at,
         ];

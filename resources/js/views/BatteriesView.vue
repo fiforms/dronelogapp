@@ -6,18 +6,33 @@
     </div>
 
     <div v-if="fleet.batteries.length" class="space-y-2">
-      <div v-for="bat in fleet.batteries" :key="bat.id" class="card flex items-start justify-between gap-3">
+      <div
+        v-for="bat in fleet.batteries"
+        :key="bat.id"
+        class="card flex items-start justify-between gap-3"
+        :class="{ 'opacity-50': !bat.is_active }"
+      >
         <div class="flex-1 min-w-0">
-          <p class="font-semibold text-sm">{{ bat.name }}</p>
+          <div class="flex items-center gap-2 flex-wrap">
+            <p class="font-semibold text-sm">{{ bat.name }}</p>
+            <span v-if="!bat.is_active"
+              class="text-xs font-medium text-amber-400 bg-amber-900/40 px-2 py-0.5 rounded-full">
+              Inactive
+            </span>
+          </div>
           <p class="text-xs text-slate-400">
             <template v-if="bat.capacity_mah">{{ bat.capacity_mah }} mAh · </template>
             {{ bat.cycle_count }} cycles
           </p>
           <p v-if="bat.purchase_date" class="text-xs text-slate-500">Purchased: {{ bat.purchase_date }}</p>
         </div>
-        <div class="flex gap-2">
-          <button class="text-slate-400 hover:text-white text-xs" @click="openForm(bat)">Edit</button>
-          <button class="text-red-500 hover:text-red-400 text-xs" @click="remove(bat.id)">Delete</button>
+        <div class="flex gap-2 shrink-0">
+          <template v-if="bat.is_active">
+            <button class="text-slate-400 hover:text-white text-xs" @click="openForm(bat)">Edit</button>
+            <button v-if="!bat.has_flights" class="text-red-500 hover:text-red-400 text-xs" @click="remove(bat.id)">Delete</button>
+            <button v-else class="text-amber-500 hover:text-amber-400 text-xs" @click="deactivate(bat.id)">Deactivate</button>
+          </template>
+          <button v-else class="text-emerald-500 hover:text-emerald-400 text-xs" @click="reactivate(bat.id)">Reactivate</button>
         </div>
       </div>
     </div>
@@ -94,6 +109,19 @@ async function save() {
 
 async function remove(id) {
   if (!confirm('Delete this battery?')) return;
-  await fleet.deleteBattery(id);
+  try {
+    await fleet.deleteBattery(id);
+  } catch (e) {
+    alert(e.response?.data?.message ?? 'Failed to delete');
+  }
+}
+
+async function deactivate(id) {
+  if (!confirm('Deactivate this battery? It will be hidden from new flight forms but its history is preserved.')) return;
+  await fleet.setBatteryActive(id, false);
+}
+
+async function reactivate(id) {
+  await fleet.setBatteryActive(id, true);
 }
 </script>

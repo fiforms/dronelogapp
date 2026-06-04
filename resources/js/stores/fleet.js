@@ -14,6 +14,9 @@ export const useFleetStore = defineStore('fleet', {
     getters: {
         defaultTemplate: (state) =>
             state.checklistTemplates.find((t) => t.is_default) ?? state.checklistTemplates[0] ?? null,
+        activeDrones: (state) => state.drones.filter((d) => d.is_active !== false),
+        activeBatteries: (state) => state.batteries.filter((b) => b.is_active !== false),
+        activeAccessories: (state) => state.accessories.filter((a) => a.is_active !== false),
     },
 
     actions: {
@@ -86,6 +89,12 @@ export const useFleetStore = defineStore('fleet', {
             this.drones = this.drones.filter((d) => d.id !== id);
         },
 
+        async setDroneActive(id, isActive) {
+            const { data: updated } = await axios.put(`/api/v1/drones/${id}`, { is_active: isActive });
+            const idx = this.drones.findIndex((d) => d.id === id);
+            if (idx !== -1) this.drones[idx] = updated.data;
+        },
+
         // Battery CRUD
         async saveBattery(data) {
             if (data.id) {
@@ -104,6 +113,12 @@ export const useFleetStore = defineStore('fleet', {
             this.batteries = this.batteries.filter((b) => b.id !== id);
         },
 
+        async setBatteryActive(id, isActive) {
+            const { data: updated } = await axios.put(`/api/v1/batteries/${id}`, { is_active: isActive });
+            const idx = this.batteries.findIndex((b) => b.id === id);
+            if (idx !== -1) this.batteries[idx] = updated.data;
+        },
+
         // Accessory CRUD
         async saveAccessory(data) {
             if (data.id) {
@@ -120,6 +135,12 @@ export const useFleetStore = defineStore('fleet', {
         async deleteAccessory(id) {
             await axios.delete(`/api/v1/accessories/${id}`);
             this.accessories = this.accessories.filter((a) => a.id !== id);
+        },
+
+        async setAccessoryActive(id, isActive) {
+            const { data: updated } = await axios.put(`/api/v1/accessories/${id}`, { is_active: isActive });
+            const idx = this.accessories.findIndex((a) => a.id === id);
+            if (idx !== -1) this.accessories[idx] = updated.data;
         },
     },
 });

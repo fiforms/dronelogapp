@@ -19,7 +19,8 @@ class UpdateAccessoryRequest extends FormRequest
         return [
             'name'  => ['sometimes', 'required', 'string', 'max:100'],
             'type'  => ['nullable', 'string', 'max:50'],
-            'notes' => ['nullable', 'string'],
+            'notes'     => ['nullable', 'string'],
+            'is_active' => ['sometimes', 'boolean'],
         ];
     }
 }

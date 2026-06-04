@@ -15,6 +15,11 @@ class Drone extends Model
         'serial',
         'registration_number',
         'notes',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
     ];
 
     public function team(): BelongsTo

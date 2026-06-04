@@ -6,15 +6,30 @@
     </div>
 
     <div v-if="fleet.accessories.length" class="space-y-2">
-      <div v-for="acc in fleet.accessories" :key="acc.id" class="card flex items-start justify-between gap-3">
+      <div
+        v-for="acc in fleet.accessories"
+        :key="acc.id"
+        class="card flex items-start justify-between gap-3"
+        :class="{ 'opacity-50': !acc.is_active }"
+      >
         <div class="flex-1 min-w-0">
-          <p class="font-semibold text-sm">{{ acc.name }}</p>
+          <div class="flex items-center gap-2 flex-wrap">
+            <p class="font-semibold text-sm">{{ acc.name }}</p>
+            <span v-if="!acc.is_active"
+              class="text-xs font-medium text-amber-400 bg-amber-900/40 px-2 py-0.5 rounded-full">
+              Inactive
+            </span>
+          </div>
           <p v-if="acc.type" class="text-xs text-slate-400 capitalize">{{ acc.type }}</p>
           <p v-if="acc.notes" class="text-xs text-slate-500 truncate">{{ acc.notes }}</p>
         </div>
-        <div class="flex gap-2">
-          <button class="text-slate-400 hover:text-white text-xs" @click="openForm(acc)">Edit</button>
-          <button class="text-red-500 hover:text-red-400 text-xs" @click="remove(acc.id)">Delete</button>
+        <div class="flex gap-2 shrink-0">
+          <template v-if="acc.is_active">
+            <button class="text-slate-400 hover:text-white text-xs" @click="openForm(acc)">Edit</button>
+            <button v-if="!acc.has_flights" class="text-red-500 hover:text-red-400 text-xs" @click="remove(acc.id)">Delete</button>
+            <button v-else class="text-amber-500 hover:text-amber-400 text-xs" @click="deactivate(acc.id)">Deactivate</button>
+          </template>
+          <button v-else class="text-emerald-500 hover:text-emerald-400 text-xs" @click="reactivate(acc.id)">Reactivate</button>
         </div>
       </div>
     </div>
@@ -90,6 +105,19 @@ async function save() {
 
 async function remove(id) {
   if (!confirm('Delete this accessory?')) return;
-  await fleet.deleteAccessory(id);
+  try {
+    await fleet.deleteAccessory(id);
+  } catch (e) {
+    alert(e.response?.data?.message ?? 'Failed to delete');
+  }
+}
+
+async function deactivate(id) {
+  if (!confirm('Deactivate this accessory? It will be hidden from new flight forms but its history is preserved.')) return;
+  await fleet.setAccessoryActive(id, false);
+}
+
+async function reactivate(id) {
+  await fleet.setAccessoryActive(id, true);
 }
 </script>

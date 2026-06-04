@@ -13,6 +13,11 @@ class Accessory extends Model
         'name',
         'type',
         'notes',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
     ];
 
     public function team(): BelongsTo

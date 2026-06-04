@@ -25,7 +25,7 @@
         <label class="label">Drone <span class="text-red-400">*</span></label>
         <select v-model="form.drone_id" class="input-field" required>
           <option value="">— Select drone —</option>
-          <option v-for="d in fleet.drones" :key="d.id" :value="d.id">{{ d.name }} ({{ d.model }})</option>
+          <option v-for="d in fleet.activeDrones" :key="d.id" :value="d.id">{{ d.name }} ({{ d.model }})</option>
         </select>
         <RouterLink to="/drones" class="text-xs text-blue-400 mt-1 inline-block">+ Add a drone</RouterLink>
       </div>
@@ -34,7 +34,7 @@
         <label class="label">Battery</label>
         <select v-model="form.battery_id" class="input-field">
           <option value="">— None / Unknown —</option>
-          <option v-for="b in fleet.batteries" :key="b.id" :value="b.id">{{ b.name }}</option>
+          <option v-for="b in fleet.activeBatteries" :key="b.id" :value="b.id">{{ b.name }}</option>
         </select>
       </div>
 

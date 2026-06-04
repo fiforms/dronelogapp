@@ -6,18 +6,33 @@
     </div>
 
     <div v-if="fleet.drones.length" class="space-y-2">
-      <div v-for="drone in fleet.drones" :key="drone.id" class="card flex items-start justify-between gap-3">
+      <div
+        v-for="drone in fleet.drones"
+        :key="drone.id"
+        class="card flex items-start justify-between gap-3"
+        :class="{ 'opacity-50': !drone.is_active }"
+      >
         <div class="flex-1 min-w-0">
-          <p class="font-semibold text-sm">{{ drone.name }}</p>
+          <div class="flex items-center gap-2 flex-wrap">
+            <p class="font-semibold text-sm">{{ drone.name }}</p>
+            <span v-if="!drone.is_active"
+              class="text-xs font-medium text-amber-400 bg-amber-900/40 px-2 py-0.5 rounded-full">
+              Inactive
+            </span>
+          </div>
           <p class="text-xs text-slate-400">{{ drone.model }} · Serial: {{ drone.serial }}</p>
           <p v-if="drone.registration_number" class="text-xs text-slate-500">
             FAA Reg: {{ drone.registration_number }}
           </p>
           <p v-if="drone.notes" class="text-xs text-slate-500 mt-0.5 truncate">{{ drone.notes }}</p>
         </div>
-        <div class="flex gap-2">
-          <button class="text-slate-400 hover:text-white text-xs" @click="openForm(drone)">Edit</button>
-          <button class="text-red-500 hover:text-red-400 text-xs" @click="remove(drone.id)">Delete</button>
+        <div class="flex gap-2 shrink-0">
+          <template v-if="drone.is_active">
+            <button class="text-slate-400 hover:text-white text-xs" @click="openForm(drone)">Edit</button>
+            <button v-if="!drone.has_flights" class="text-red-500 hover:text-red-400 text-xs" @click="remove(drone.id)">Delete</button>
+            <button v-else class="text-amber-500 hover:text-amber-400 text-xs" @click="deactivate(drone.id)">Deactivate</button>
+          </template>
+          <button v-else class="text-emerald-500 hover:text-emerald-400 text-xs" @click="reactivate(drone.id)">Reactivate</button>
         </div>
       </div>
     </div>
@@ -95,6 +110,19 @@ async function save() {
 
 async function remove(id) {
   if (!confirm('Delete this drone?')) return;
-  await fleet.deleteDrone(id);
+  try {
+    await fleet.deleteDrone(id);
+  } catch (e) {
+    alert(e.response?.data?.message ?? 'Failed to delete');
+  }
+}
+
+async function deactivate(id) {
+  if (!confirm('Deactivate this drone? It will be hidden from new flight forms but its history is preserved.')) return;
+  await fleet.setDroneActive(id, false);
+}
+
+async function reactivate(id) {
+  await fleet.setDroneActive(id, true);
 }
 </script>

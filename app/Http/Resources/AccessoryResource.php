@@ -18,9 +18,11 @@ class AccessoryResource extends JsonResource
             'id'         => $this->id,
             'name'       => $this->name,
             'type'       => $this->type,
-            'notes'      => $this->notes,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+            'notes'       => $this->notes,
+            'is_active'   => $this->is_active,
+            'has_flights' => ($this->flights_count ?? 0) > 0,
+            'created_at'  => $this->created_at,
+            'updated_at'  => $this->updated_at,
         ];
     }
 }

@@ -22,6 +22,7 @@ class UpdateDroneRequest extends FormRequest
             'serial'              => ['sometimes', 'required', 'string', 'max:100'],
             'registration_number' => ['nullable', 'string', 'max:50'],
             'notes'               => ['nullable', 'string'],
+            'is_active'           => ['sometimes', 'boolean'],
         ];
     }
 }

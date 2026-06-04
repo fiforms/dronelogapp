@@ -15,7 +15,10 @@ class DroneController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection
     {
-        $drones = $request->user()->currentTeam()->drones()->orderBy('name')->get();
+        $drones = $request->user()->currentTeam()->drones()
+            ->withCount('flights')
+            ->orderBy('name')
+            ->get();
 
         return DroneResource::collection($drones);
     }
@@ -45,6 +48,14 @@ class DroneController extends Controller
     public function destroy(Request $request, Drone $drone): JsonResponse
     {
         $this->authorizeTeam($request, $drone->team_id);
+
+        if ($drone->flights()->exists()) {
+            return response()->json(
+                ['message' => 'This drone has flight records and cannot be deleted. Deactivate it instead.'],
+                409
+            );
+        }
+
         $drone->delete();
 
         return response()->json(null, 204);

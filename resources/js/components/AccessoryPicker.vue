@@ -28,7 +28,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue']);
 
 const fleet = useFleetStore();
-const accessories = computed(() => fleet.accessories);
+const accessories = computed(() => fleet.activeAccessories);
 const selected = computed(() => props.modelValue);
 
 function toggle(id) {

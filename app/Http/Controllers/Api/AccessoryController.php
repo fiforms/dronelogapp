@@ -15,7 +15,10 @@ class AccessoryController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection
     {
-        $accessories = $request->user()->currentTeam()->accessories()->orderBy('name')->get();
+        $accessories = $request->user()->currentTeam()->accessories()
+            ->withCount('flights')
+            ->orderBy('name')
+            ->get();
 
         return AccessoryResource::collection($accessories);
     }
@@ -45,6 +48,14 @@ class AccessoryController extends Controller
     public function destroy(Request $request, Accessory $accessory): JsonResponse
     {
         $this->authorizeTeam($request, $accessory->team_id);
+
+        if ($accessory->flights()->exists()) {
+            return response()->json(
+                ['message' => 'This accessory has flight records and cannot be deleted. Deactivate it instead.'],
+                409
+            );
+        }
+
         $accessory->delete();
 
         return response()->json(null, 204);

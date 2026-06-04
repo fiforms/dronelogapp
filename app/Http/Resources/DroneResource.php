@@ -21,6 +21,8 @@ class DroneResource extends JsonResource
             'serial'              => $this->serial,
             'registration_number' => $this->registration_number,
             'notes'               => $this->notes,
+            'is_active'           => $this->is_active,
+            'has_flights'         => ($this->flights_count ?? 0) > 0,
             'created_at'          => $this->created_at,
             'updated_at'          => $this->updated_at,
         ];

@@ -15,7 +15,10 @@ class BatteryController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection
     {
-        $batteries = $request->user()->currentTeam()->batteries()->orderBy('name')->get();
+        $batteries = $request->user()->currentTeam()->batteries()
+            ->withCount('flights')
+            ->orderBy('name')
+            ->get();
 
         return BatteryResource::collection($batteries);
     }
@@ -45,6 +48,14 @@ class BatteryController extends Controller
     public function destroy(Request $request, Battery $battery): JsonResponse
     {
         $this->authorizeTeam($request, $battery->team_id);
+
+        if ($battery->flights()->exists()) {
+            return response()->json(
+                ['message' => 'This battery has flight records and cannot be deleted. Deactivate it instead.'],
+                409
+            );
+        }
+
         $battery->delete();
 
         return response()->json(null, 204);

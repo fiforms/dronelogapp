@@ -15,10 +15,12 @@ class Battery extends Model
         'purchase_date',
         'cycle_count',
         'notes',
+        'is_active',
     ];
 
     protected $casts = [
         'purchase_date' => 'date',
+        'is_active'     => 'boolean',
     ];
 
     public function team(): BelongsTo
