@@ -46,8 +46,8 @@ export const useFlightsStore = defineStore('flights', {
                 laanc_status:               data.laanc_status ?? 'na',
                 laanc_authorization_number: data.laanc_authorization_number ?? null,
                 post_flight_notes:          null,
-                accessories:                data.accessories ?? [],
-                checklist:                  data.checklist ?? [],
+                accessories:                JSON.parse(JSON.stringify(data.accessories ?? [])),
+                checklist:                  JSON.parse(JSON.stringify(data.checklist ?? [])),
                 synced:                     0,
                 server_id:                  null,
             };
@@ -58,7 +58,7 @@ export const useFlightsStore = defineStore('flights', {
             this.currentFlight = flight;
             this.recentFlights.unshift(flight);
 
-            await registerBackgroundSync();
+            registerBackgroundSync();
 
             return flight;
         },
@@ -80,7 +80,7 @@ export const useFlightsStore = defineStore('flights', {
             if (flight) Object.assign(flight, update);
             if (this.currentFlight?.id === flightId) this.currentFlight = null;
 
-            await registerBackgroundSync();
+            registerBackgroundSync();
         },
 
         async getFlightById(id) {
