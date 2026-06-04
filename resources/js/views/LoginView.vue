@@ -10,13 +10,13 @@
         <div>
           <label class="label">Email</label>
           <input v-model="form.email" type="email" autocomplete="email"
-            class="input-field" placeholder="pilot@example.com" required />
+            class="input-field" required />
         </div>
 
         <div>
           <label class="label">Password</label>
           <input v-model="form.password" type="password" autocomplete="current-password"
-            class="input-field" placeholder="••••••••" required />
+            class="input-field" required />
         </div>
 
         <p v-if="error" class="text-red-400 text-sm text-center">{{ error }}</p>
