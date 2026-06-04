@@ -2,12 +2,15 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\PromptsForPassword;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 
 class ResetPassword extends Command
 {
+    use PromptsForPassword;
+
     protected $signature = 'user:reset-password {email? : The user\'s email address}';
     protected $description = "Reset a user's password";
 
@@ -21,8 +24,8 @@ class ResetPassword extends Command
             return self::FAILURE;
         }
 
-        $password = $this->secret('New password');
-        $confirm  = $this->secret('Confirm new password');
+        $password = $this->askPassword('New password');
+        $confirm  = $this->askPassword('Confirm new password');
 
         if ($password !== $confirm) {
             $this->error('Passwords do not match.');

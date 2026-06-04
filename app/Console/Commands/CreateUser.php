@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\PromptsForPassword;
 use App\Models\DefaultChecklistItem;
 use App\Models\Team;
 use App\Models\User;
@@ -10,6 +11,8 @@ use Illuminate\Support\Facades\Hash;
 
 class CreateUser extends Command
 {
+    use PromptsForPassword;
+
     protected $signature = 'user:create';
     protected $description = 'Create a new user account with a personal team and default checklist';
 
@@ -23,8 +26,8 @@ class CreateUser extends Command
             return self::FAILURE;
         }
 
-        $password = $this->secret('Password');
-        $confirm  = $this->secret('Confirm password');
+        $password = $this->askPassword('Password');
+        $confirm  = $this->askPassword('Confirm password');
 
         if ($password !== $confirm) {
             $this->error('Passwords do not match.');
