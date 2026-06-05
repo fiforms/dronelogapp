@@ -29,8 +29,16 @@ class BackupController extends Controller
             ])->values()->all(),
         ])->values()->all();
 
+        $riskItems = $team->riskItems()->orderBy('sort_order')->get()->map(fn ($r) => [
+            'id'          => $r->id,
+            'sort_order'  => $r->sort_order,
+            'label'       => $r->label,
+            'description' => $r->description,
+            'is_active'   => $r->is_active,
+        ])->values()->all();
+
         $flights = $team->flights()
-            ->with(['accessories', 'checklistEntries'])
+            ->with(['accessories', 'checklistEntries', 'riskScores'])
             ->orderBy('started_at')
             ->get()
             ->map(fn ($f) => [
@@ -58,6 +66,12 @@ class BackupController extends Controller
                     'checked'           => (bool) $e->checked,
                     'comment'           => $e->comment,
                 ])->values()->all(),
+                'risk_scores'                => $f->riskScores->map(fn ($r) => [
+                    'risk_item_id'     => $r->risk_item_id,
+                    'label'            => $r->label,
+                    'score'            => $r->score,
+                    'mitigation_notes' => $r->mitigation_notes,
+                ])->values()->all(),
             ])->values()->all();
 
         return response()->json([
@@ -67,6 +81,7 @@ class BackupController extends Controller
             'batteries'           => $batteries,
             'accessories'         => $accessories,
             'checklist_templates' => $templates,
+            'risk_items'          => $riskItems,
             'flights'             => $flights,
         ]);
     }
@@ -79,16 +94,28 @@ class BackupController extends Controller
             'batteries'           => ['nullable', 'array'],
             'accessories'         => ['nullable', 'array'],
             'checklist_templates' => ['nullable', 'array'],
+            'risk_items'          => ['nullable', 'array'],
             'flights'             => ['nullable', 'array'],
         ]);
 
         $team   = $request->user()->currentTeam();
         $userId = $request->user()->id;
 
-        $droneMap   = [];
-        $batteryMap = [];
-        $accessMap  = [];
-        $itemMap    = [];
+        // Wipe existing team data before restoring so we get a clean slate.
+        // Order matters: flights first so their pivot rows (accessories, checklist,
+        // risk scores) cascade away, then templates (cascade to items), then fleet.
+        $team->flights()->delete();
+        $team->checklistTemplates()->delete();
+        $team->riskItems()->delete();
+        $team->accessories()->delete();
+        $team->batteries()->delete();
+        $team->drones()->delete();
+
+        $droneMap    = [];
+        $batteryMap  = [];
+        $accessMap   = [];
+        $itemMap     = [];
+        $riskItemMap = [];
 
         foreach ($request->input('drones', []) as $d) {
             $drone              = $team->drones()->create([
@@ -136,6 +163,16 @@ class BackupController extends Controller
                 ]);
                 $itemMap[$item['id']] = $newItem->id;
             }
+        }
+
+        foreach ($request->input('risk_items', []) as $r) {
+            $riskItem               = $team->riskItems()->create([
+                'sort_order'  => $r['sort_order'],
+                'label'       => $r['label'],
+                'description' => $r['description'] ?? null,
+                'is_active'   => $r['is_active'] ?? true,
+            ]);
+            $riskItemMap[$r['id']] = $riskItem->id;
         }
 
         $synced = 0;
@@ -202,6 +239,15 @@ class BackupController extends Controller
                     );
                 }
 
+                foreach ($f['risk_scores'] ?? [] as $score) {
+                    $flight->riskScores()->create([
+                        'risk_item_id'     => isset($score['risk_item_id']) ? ($riskItemMap[$score['risk_item_id']] ?? null) : null,
+                        'label'            => $score['label'],
+                        'score'            => $score['score'],
+                        'mitigation_notes' => $score['mitigation_notes'] ?? null,
+                    ]);
+                }
+
                 $synced++;
             } catch (\Throwable $e) {
                 $errors[] = ['client_uuid' => $f['client_uuid'] ?? null, 'error' => $e->getMessage()];
@@ -213,6 +259,7 @@ class BackupController extends Controller
             'batteries_created'   => count($batteryMap),
             'accessories_created' => count($accessMap),
             'templates_created'   => count($request->input('checklist_templates', [])),
+            'risk_items_created'  => count($riskItemMap),
             'flights_synced'      => $synced,
             'errors'              => $errors,
         ]);
