@@ -18,6 +18,8 @@ class UpdateFlightRequest extends FormRequest
     {
         return [
             'ended_at'                      => ['nullable', 'date'],
+            'duration_minutes'              => ['nullable', 'integer', 'min:0'],
+            'battery_pct_end'               => ['nullable', 'integer', 'between:0,100'],
             'post_flight_notes'             => ['nullable', 'string'],
             'location_description'          => ['nullable', 'string', 'max:255'],
             'flight_plan'                   => ['nullable', 'string'],

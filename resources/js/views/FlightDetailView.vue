@@ -30,6 +30,14 @@
           <span class="text-slate-400">Battery</span>
           <span>{{ batteryName }}</span>
         </div>
+        <div v-if="flight.battery_pct_start != null || flight.battery_pct_end != null" class="flex justify-between">
+          <span class="text-slate-400">Battery %</span>
+          <span>
+            <template v-if="flight.battery_pct_start != null">{{ flight.battery_pct_start }}% start</template>
+            <template v-if="flight.battery_pct_start != null && flight.battery_pct_end != null"> → </template>
+            <template v-if="flight.battery_pct_end != null">{{ flight.battery_pct_end }}% end</template>
+          </span>
+        </div>
         <div v-if="accessoryNames" class="flex justify-between">
           <span class="text-slate-400">Accessories</span>
           <span>{{ accessoryNames }}</span>
@@ -133,9 +141,9 @@ const accessoryNames = computed(() => {
 });
 
 const duration = computed(() => {
-  if (!flight.value?.ended_at || !flight.value?.started_at) return 'In progress';
-  const ms = new Date(flight.value.ended_at) - new Date(flight.value.started_at);
-  const m = Math.floor(ms / 60000);
+  if (!flight.value?.ended_at) return 'In progress';
+  const m = flight.value.duration_minutes
+    ?? Math.floor((new Date(flight.value.ended_at) - new Date(flight.value.started_at)) / 60000);
   return m < 60 ? `${m} min` : `${Math.floor(m / 60)}h ${m % 60}m`;
 });
 

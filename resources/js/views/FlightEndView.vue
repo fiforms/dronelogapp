@@ -8,6 +8,16 @@
     </div>
 
     <div>
+      <label class="label">Flight Duration (minutes)</label>
+      <input v-model.number="durationMinutes" type="number" class="input-field" min="0" placeholder="e.g. 18" />
+    </div>
+
+    <div>
+      <label class="label">Battery % at End</label>
+      <input v-model.number="batteryPctEnd" type="number" class="input-field" min="0" max="100" placeholder="e.g. 30" />
+    </div>
+
+    <div>
       <label class="label">Post-Flight Notes</label>
       <textarea v-model="notes" rows="5" class="input-field"
         placeholder="Any observations, incidents, anomalies, or notes about the flight…" />
@@ -37,6 +47,8 @@ const flights = useFlightsStore();
 const flightId = computed(() => route.params.id);
 const flight = computed(() => flights.recentFlights.find((f) => String(f.id) === String(flightId.value)));
 const notes = ref('');
+const durationMinutes = ref(null);
+const batteryPctEnd = ref(null);
 const saving = ref(false);
 
 const elapsed = computed(() => {
@@ -50,11 +62,18 @@ function formatTime(iso) {
   return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 }
 
+function calcDurationMinutes() {
+  if (!flight.value?.started_at) return null;
+  return Math.round((Date.now() - new Date(flight.value.started_at).getTime()) / 60000);
+}
+
 async function save() {
   saving.value = true;
   try {
     await flights.endFlight(Number(flightId.value), {
-      ended_at: new Date().toISOString(),
+      ended_at:         new Date().toISOString(),
+      duration_minutes: durationMinutes.value || null,
+      battery_pct_end:  batteryPctEnd.value ?? null,
       post_flight_notes: notes.value || null,
     });
     router.push(`/flights/${flightId.value}`);
@@ -63,5 +82,8 @@ async function save() {
   }
 }
 
-onMounted(() => flights.loadRecent());
+onMounted(async () => {
+  await flights.loadRecent();
+  durationMinutes.value = calcDurationMinutes();
+});
 </script>

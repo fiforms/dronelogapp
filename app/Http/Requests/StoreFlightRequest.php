@@ -20,6 +20,7 @@ class StoreFlightRequest extends FormRequest
             'client_uuid'                   => ['required', 'uuid'],
             'drone_id'                      => ['nullable', 'integer', 'exists:drones,id'],
             'battery_id'                    => ['nullable', 'integer', 'exists:batteries,id'],
+            'battery_pct_start'             => ['nullable', 'integer', 'between:0,100'],
             'started_at'                    => ['required', 'date'],
             'ended_at'                      => ['nullable', 'date', 'after:started_at'],
             'lat'                           => ['nullable', 'numeric', 'between:-90,90'],

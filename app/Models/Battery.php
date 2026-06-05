@@ -13,9 +13,12 @@ class Battery extends Model
         'name',
         'capacity_mah',
         'purchase_date',
-        'cycle_count',
         'notes',
         'is_active',
+    ];
+
+    protected $attributes = [
+        'is_active' => true,
     ];
 
     protected $casts = [

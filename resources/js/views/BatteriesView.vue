@@ -21,8 +21,7 @@
             </span>
           </div>
           <p class="text-xs text-slate-400">
-            <template v-if="bat.capacity_mah">{{ bat.capacity_mah }} mAh · </template>
-            {{ bat.cycle_count }} cycles
+            <template v-if="bat.capacity_mah">{{ bat.capacity_mah }} mAh · </template>{{ bat.flights_count ?? 0 }} logged flight{{ (bat.flights_count ?? 0) !== 1 ? 's' : '' }}
           </p>
           <p v-if="bat.purchase_date" class="text-xs text-slate-500">Purchased: {{ bat.purchase_date }}</p>
         </div>
@@ -56,10 +55,6 @@
           <input v-model="form.purchase_date" type="date" class="input-field" />
         </div>
         <div>
-          <label class="label">Cycle Count</label>
-          <input v-model.number="form.cycle_count" type="number" class="input-field" placeholder="0" min="0" />
-        </div>
-        <div>
           <label class="label">Notes</label>
           <textarea v-model="form.notes" rows="2" class="input-field" />
         </div>
@@ -84,11 +79,11 @@ const showForm = ref(false);
 const editing = ref(null);
 const saving = ref(false);
 const error = ref('');
-const form = reactive({ name: '', capacity_mah: '', purchase_date: '', cycle_count: 0, notes: '' });
+const form = reactive({ name: '', capacity_mah: '', purchase_date: '', notes: '' });
 
 function openForm(bat = null) {
   editing.value = bat;
-  Object.assign(form, bat ?? { name: '', capacity_mah: '', purchase_date: '', cycle_count: 0, notes: '' });
+  Object.assign(form, bat ?? { name: '', capacity_mah: '', purchase_date: '', notes: '' });
   error.value = '';
   showForm.value = true;
 }

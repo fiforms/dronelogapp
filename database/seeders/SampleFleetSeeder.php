@@ -23,9 +23,9 @@ class SampleFleetSeeder extends Seeder
         ]);
 
         $team->batteries()->createMany([
-            ['name' => 'Battery #1', 'capacity_mah' => 2453, 'cycle_count' => 0],
-            ['name' => 'Battery #2', 'capacity_mah' => 2453, 'cycle_count' => 0],
-            ['name' => 'Battery #3', 'capacity_mah' => 2453, 'cycle_count' => 0],
+            ['name' => 'Battery #1', 'capacity_mah' => 2453],
+            ['name' => 'Battery #2', 'capacity_mah' => 2453],
+            ['name' => 'Battery #3', 'capacity_mah' => 2453],
         ]);
 
         $team->accessories()->createMany([

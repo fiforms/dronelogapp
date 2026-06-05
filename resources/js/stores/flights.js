@@ -35,8 +35,11 @@ export const useFlightsStore = defineStore('flights', {
                 client_uuid:                uuidv4(),
                 drone_id:                   data.drone_id ?? null,
                 battery_id:                 data.battery_id ?? null,
+                battery_pct_start:          data.battery_pct_start ?? null,
+                battery_pct_end:            null,
                 started_at:                 new Date().toISOString(),
                 ended_at:                   null,
+                duration_minutes:           null,
                 lat:                        data.lat ?? null,
                 lng:                        data.lng ?? null,
                 location_description:       data.location_description ?? null,
@@ -71,9 +74,15 @@ export const useFlightsStore = defineStore('flights', {
             if (this.currentFlight?.id === flightId) this.currentFlight.checklist = checklist;
         },
 
-        /** End the flight — sets ended_at and post_flight_notes, queues sync. */
-        async endFlight(flightId, { ended_at, post_flight_notes }) {
-            const update = { ended_at: ended_at ?? new Date().toISOString(), post_flight_notes, synced: 0 };
+        /** End the flight — sets ended_at, duration, battery end %, and notes, then queues sync. */
+        async endFlight(flightId, { ended_at, duration_minutes, battery_pct_end, post_flight_notes }) {
+            const update = {
+                ended_at:         ended_at ?? new Date().toISOString(),
+                duration_minutes: duration_minutes ?? null,
+                battery_pct_end:  battery_pct_end ?? null,
+                post_flight_notes,
+                synced: 0,
+            };
             await db.flights.update(flightId, update);
 
             const flight = this.recentFlights.find((f) => f.id === flightId);

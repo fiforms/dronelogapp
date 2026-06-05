@@ -39,6 +39,12 @@
       </div>
 
       <div>
+        <label class="label">Battery % at Start</label>
+        <input v-model.number="form.battery_pct_start" type="number" class="input-field"
+          placeholder="e.g. 100" min="0" max="100" />
+      </div>
+
+      <div>
         <label class="label">Accessories</label>
         <AccessoryPicker v-model="form.accessories" />
       </div>
@@ -124,6 +130,7 @@ const gps = ref({ lat: null, lng: null });
 const form = reactive({
   drone_id:                   '',
   battery_id:                 '',
+  battery_pct_start:          null,
   accessories:                [],
   location_description:       '',
   flight_plan:                '',

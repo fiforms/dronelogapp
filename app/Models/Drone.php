@@ -18,6 +18,10 @@ class Drone extends Model
         'is_active',
     ];
 
+    protected $attributes = [
+        'is_active' => true,
+    ];
+
     protected $casts = [
         'is_active' => 'boolean',
     ];
