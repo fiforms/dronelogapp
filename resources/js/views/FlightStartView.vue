@@ -169,8 +169,8 @@ async function launchFlight() {
       ...gps.value,
       battery_id: form.battery_id || null,
       drone_id:   Number(form.drone_id),
-      checklist:  checklist.value.map(({ checklist_item_id, checked, comment }) => ({
-        checklist_item_id, checked, comment,
+      checklist:  checklist.value.map(({ checklist_item_id, checked, comment, label }) => ({
+        checklist_item_id, checked, comment, label,
       })),
     });
     router.push(`/flights/${flight.id}/active`);

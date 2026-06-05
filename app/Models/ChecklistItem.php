@@ -12,10 +12,16 @@ class ChecklistItem extends Model
         'sort_order',
         'label',
         'has_comment_box',
+        'is_active',
+    ];
+
+    protected $attributes = [
+        'is_active' => true,
     ];
 
     protected $casts = [
         'has_comment_box' => 'boolean',
+        'is_active'       => 'boolean',
     ];
 
     public function template(): BelongsTo

@@ -26,6 +26,7 @@ class ChecklistTemplate extends Model
     public function items(): HasMany
     {
         return $this->hasMany(ChecklistItem::class, 'template_id')
+            ->where('is_active', true)
             ->orderBy('sort_order');
     }
 }

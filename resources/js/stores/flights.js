@@ -139,7 +139,25 @@ export const useFlightsStore = defineStore('flights', {
         async getFlightById(id) {
             // Local first
             const local = await db.flights.get(Number(id));
-            if (local) return local;
+            if (local) {
+                // Older flights stored before labels were written — enrich from cached items
+                if (local.checklist?.some((c) => !c.label)) {
+                    const itemMap = {};
+                    for (const c of local.checklist) {
+                        if (!c.label && c.checklist_item_id) {
+                            const item = await db.checklist_items
+                                .where('server_id').equals(c.checklist_item_id).first();
+                            if (item) itemMap[c.checklist_item_id] = item.label;
+                        }
+                    }
+                    if (Object.keys(itemMap).length) {
+                        local.checklist = local.checklist.map((c) =>
+                            c.label ? c : { ...c, label: itemMap[c.checklist_item_id] ?? '' }
+                        );
+                    }
+                }
+                return local;
+            }
             // Fall back to API
             const { data } = await axios.get(`/api/v1/flights/${id}`);
             return data.data;

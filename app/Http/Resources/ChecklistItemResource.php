@@ -20,6 +20,7 @@ class ChecklistItemResource extends JsonResource
             'sort_order'      => $this->sort_order,
             'label'           => $this->label,
             'has_comment_box' => $this->has_comment_box,
+            'is_active'       => $this->is_active,
         ];
     }
 }

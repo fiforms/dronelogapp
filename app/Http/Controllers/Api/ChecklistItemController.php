@@ -36,14 +36,14 @@ class ChecklistItemController extends Controller
 
     public function update(Request $request, ChecklistItem $checklistItem): ChecklistItemResource
     {
-        $checklistItem->update($request->only(['label', 'sort_order', 'has_comment_box']));
+        $checklistItem->update($request->only(['label', 'sort_order', 'has_comment_box', 'is_active']));
 
         return new ChecklistItemResource($checklistItem);
     }
 
     public function destroy(ChecklistItem $checklistItem): JsonResponse
     {
-        $checklistItem->delete();
+        $checklistItem->update(['is_active' => false]);
 
         return response()->json(null, 204);
     }
