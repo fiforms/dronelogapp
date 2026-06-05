@@ -108,21 +108,76 @@ If someone attempts to sign in with Google using an email address that already h
 
 ## Production Deployment
 
-1. Set `APP_ENV=production`, `APP_DEBUG=false`
-2. Configure MySQL in `.env`
-3. Set `APP_URL`, `FRONTEND_URL`, and `SANCTUM_STATEFUL_DOMAINS` to your production domain
-4. If using Google OAuth, set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REDIRECT_URI`
-4. Run:
-   ```bash
-   npm run build
-   php artisan migrate --seed --force
-   php artisan config:cache && php artisan route:cache && php artisan view:cache
-   ```
-5. Point nginx/Apache web root to `public/`
-6. Create your account:
-   ```bash
-   php artisan user:create
-   ```
+### Prerequisites
+
+- PHP 8.4+ with extensions: `pdo_mysql`, `mbstring`, `xml`, `curl`
+- Composer 2
+- Node 20+ (only needed to build the frontend; not required on the server after that)
+- MySQL 8+
+- A web server (nginx or Apache) pointed at `public/`
+- HTTPS — required for PWA install and the Geolocation API
+
+### First deploy
+
+```bash
+git clone <repo> /var/www/dronelogapp
+cd /var/www/dronelogapp
+
+composer install --no-dev --optimize-autoloader
+npm ci && npm run build
+
+cp .env.example .env
+php artisan key:generate
+```
+
+Edit `.env` and set at minimum:
+
+```env
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://yourdomain.example.com
+FRONTEND_URL=https://yourdomain.example.com
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_DATABASE=dronelog
+DB_USERNAME=your_db_user
+DB_PASSWORD=your_db_password
+
+SANCTUM_STATEFUL_DOMAINS=yourdomain.example.com
+SESSION_DOMAIN=.yourdomain.example.com
+```
+
+Then run:
+
+```bash
+php artisan migrate --force
+
+# Create the storage directory structure Laravel needs
+mkdir -p storage/framework/{cache,sessions,testing,views}
+chmod -R 775 storage bootstrap/cache
+chown -R www-data:www-data storage bootstrap/cache
+
+php artisan storage:link
+php artisan config:cache && php artisan route:cache && php artisan view:cache
+
+php artisan user:create   # create your first account
+```
+
+### Subsequent deploys
+
+```bash
+git pull
+composer install --no-dev --optimize-autoloader
+npm ci && npm run build
+
+php artisan migrate --force
+php artisan config:cache && php artisan route:cache && php artisan view:cache
+```
+
+### Google OAuth (optional)
+
+See the [Google OAuth Setup](#google-oauth-setup) section above. Set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REDIRECT_URI` in `.env`, then run `php artisan config:cache`.
 
 **HTTPS is required** for PWA install and the Geolocation API.
 
