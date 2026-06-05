@@ -101,6 +101,68 @@ export async function syncFleetFromServer(axiosInstance = axios) {
 }
 
 /**
+ * Pull the last 30 days of flights from the server and upsert them into IndexedDB.
+ * Flights with unsynced local edits (synced === 0) are left untouched — local wins.
+ * Handles pagination automatically.
+ */
+export async function pullFlightsFromServer(axiosInstance = axios) {
+    try {
+        const from = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+        let page = 1;
+        let hasMore = true;
+
+        while (hasMore) {
+            const { data } = await axiosInstance.get('/api/v1/flights', {
+                params: { from, per_page: 50, page },
+            });
+
+            for (const f of data.data) {
+                const existing = await db.flights.where('client_uuid').equals(f.client_uuid).first();
+                if (existing?.synced === 0) continue; // local unsynced edits take precedence
+
+                await db.flights.put({
+                    ...(existing ? { id: existing.id } : {}),
+                    client_uuid:                f.client_uuid,
+                    server_id:                  f.id,
+                    drone_id:                   f.drone?.id ?? null,
+                    battery_id:                 f.battery?.id ?? null,
+                    battery_pct_start:          f.battery_pct_start ?? null,
+                    battery_pct_end:            f.battery_pct_end ?? null,
+                    started_at:                 f.started_at,
+                    ended_at:                   f.ended_at ?? null,
+                    duration_minutes:           f.duration_minutes ?? null,
+                    lat:                        f.lat ?? null,
+                    lng:                        f.lng ?? null,
+                    location_description:       f.location_description ?? null,
+                    flight_plan:                f.flight_plan ?? null,
+                    purpose:                    f.purpose,
+                    purpose_notes:              f.purpose_notes ?? null,
+                    laanc_status:               f.laanc_status,
+                    laanc_authorization_number: f.laanc_authorization_number ?? null,
+                    post_flight_notes:          f.post_flight_notes ?? null,
+                    is_retrospective:           f.is_retrospective ?? false,
+                    status:                     f.status ?? 'flown',
+                    accessories:                (f.accessories ?? []).map((a) => a.id),
+                    checklist:                  (f.checklist ?? []).map((c) => ({
+                        checklist_item_id: c.checklist_item_id,
+                        label:             c.label ?? '',
+                        checked:           c.checked,
+                        comment:           c.comment ?? null,
+                    })),
+                    risk_scores:                f.risk_scores ?? [],
+                    synced:                     1,
+                });
+            }
+
+            hasMore = !!data.links?.next;
+            page++;
+        }
+    } catch (err) {
+        console.warn('[sync] Pull flights from server failed:', err.message);
+    }
+}
+
+/**
  * Register a Background Sync tag so the service worker can deliver pending flights
  * even when the tab is closed. Falls back silently on browsers without support (iOS Safari).
  */

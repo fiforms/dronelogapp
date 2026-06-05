@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { useOnline } from '@vueuse/core';
 import axios from 'axios';
 import db from '../db';
-import { syncPendingFlights, syncFleetFromServer } from '../sync';
+import { syncPendingFlights, syncFleetFromServer, pullFlightsFromServer } from '../sync';
 
 export const useSyncStore = defineStore('sync', {
     state: () => ({
@@ -43,12 +43,17 @@ export const useSyncStore = defineStore('sync', {
             if (this.syncing) return;
             this.syncing = true;
             try {
-                const result = await syncPendingFlights(axios);
-                if (result.synced > 0) {
-                    this.lastSyncedAt = new Date().toISOString();
-                }
-                await syncFleetFromServer(axios);
+                await syncPendingFlights(axios);
+                await Promise.all([
+                    syncFleetFromServer(axios),
+                    pullFlightsFromServer(axios),
+                ]);
+                this.lastSyncedAt = new Date().toISOString();
                 await this.refreshPendingCount();
+
+                // Refresh reactive flight state now that IndexedDB has server data
+                const { useFlightsStore } = await import('./flights');
+                await useFlightsStore().loadRecent();
             } finally {
                 this.syncing = false;
             }

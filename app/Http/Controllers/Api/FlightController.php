@@ -19,7 +19,7 @@ class FlightController extends Controller
         $team = $request->user()->currentTeam();
 
         $query = $team->flights()
-            ->with(['drone', 'battery', 'accessories', 'checklistEntries.checklistItem'])
+            ->with(['drone', 'battery', 'accessories', 'checklistEntries.checklistItem', 'riskScores'])
             ->orderByDesc('started_at');
 
         if ($request->has('from')) {
