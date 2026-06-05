@@ -60,6 +60,7 @@ const navItems = [
   { to: '/batteries', label: '🔋 Batteries' },
   { to: '/accessories', label: '🔧 Accessories' },
   { to: '/checklists', label: '✅ Checklists' },
+  { to: '/settings',  label: '⚙️ Settings' },
 ];
 
 async function handleLogout() {

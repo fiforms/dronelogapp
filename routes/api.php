@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AccessoryController;
+use App\Http\Controllers\Api\BackupController;
 use App\Http\Controllers\Api\BatteryController;
 use App\Http\Controllers\Api\ChecklistItemController;
 use App\Http\Controllers\Api\ChecklistTemplateController;
@@ -27,4 +28,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
     Route::post('sync/flights', [SyncController::class, 'flights']);
     Route::get('sync/status', [SyncController::class, 'status']);
+
+    Route::get('backup', [BackupController::class, 'export']);
+    Route::post('backup/restore', [BackupController::class, 'restore']);
 });

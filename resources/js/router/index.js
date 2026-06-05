@@ -14,6 +14,7 @@ const routes = [
     { path: '/batteries',              component: () => import('../views/BatteriesView.vue'),           meta: { auth: true } },
     { path: '/accessories',            component: () => import('../views/AccessoriesView.vue'),         meta: { auth: true } },
     { path: '/checklists',             component: () => import('../views/ChecklistTemplatesView.vue'),  meta: { auth: true } },
+    { path: '/settings',               component: () => import('../views/SettingsView.vue'),             meta: { auth: true } },
     { path: '/:pathMatch(.*)*',        redirect: '/' },
 ];
 
