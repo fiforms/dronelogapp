@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('flights', function (Blueprint $table) {
             $table->id();
             $table->foreignId('team_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->constrained()->nullOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('drone_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('battery_id')->nullable()->constrained()->nullOnDelete();
             $table->char('client_uuid', 36)->unique(); // UUID generated client-side for dedup
