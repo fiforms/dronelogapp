@@ -64,11 +64,54 @@ php artisan user:reset-password you@email    # reset a password (email as argume
 
 ---
 
+## Google OAuth Setup
+
+Users can sign in with their Google account. OAuth is intended for production use on a real domain — Google requires a publicly accessible HTTPS redirect URI.
+
+### 1. Create credentials
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services** → **Credentials**
+2. Click **Create Credentials** → **OAuth 2.0 Client ID**
+3. Set application type to **Web application**
+4. Under **Authorized redirect URIs**, add your production callback URL:
+   ```
+   https://yourdomain.example.com/auth/google/callback
+   ```
+5. Copy the **Client ID** and **Client Secret**
+
+### 2. Add to `.env`
+
+```env
+GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-client-secret
+GOOGLE_REDIRECT_URI=https://yourdomain.example.com/auth/google/callback
+```
+
+Also make sure `APP_URL` and `FRONTEND_URL` are set to your domain:
+
+```env
+APP_URL=https://yourdomain.example.com
+FRONTEND_URL=https://yourdomain.example.com
+```
+
+Then clear the config cache:
+
+```bash
+php artisan config:cache
+```
+
+### Account collision policy
+
+If someone attempts to sign in with Google using an email address that already has a password-based account, the login **hard fails** with an error message. Accounts are never auto-linked. The user must sign in with their password.
+
+---
+
 ## Production Deployment
 
 1. Set `APP_ENV=production`, `APP_DEBUG=false`
 2. Configure MySQL in `.env`
-3. Set `APP_URL` and `SANCTUM_STATEFUL_DOMAINS` to your production domain
+3. Set `APP_URL`, `FRONTEND_URL`, and `SANCTUM_STATEFUL_DOMAINS` to your production domain
+4. If using Google OAuth, set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REDIRECT_URI`
 4. Run:
    ```bash
    npm run build
