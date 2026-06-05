@@ -15,9 +15,14 @@
     </div>
 
     <!-- Fly now CTA -->
-    <RouterLink v-else to="/flights/start" class="btn-primary block text-center text-lg py-5">
-      ✈️ Start a Flight
-    </RouterLink>
+    <div v-else class="space-y-2">
+      <RouterLink to="/flights/start" class="btn-primary block text-center text-lg py-5">
+        ✈️ Start a Flight
+      </RouterLink>
+      <RouterLink to="/flights/log" class="btn-secondary block text-center text-sm py-2.5">
+        Log a Past Flight
+      </RouterLink>
+    </div>
 
     <!-- Recent flights -->
     <div>

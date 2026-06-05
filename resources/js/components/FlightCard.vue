@@ -10,6 +10,9 @@
           <span v-if="!flight.ended_at" class="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-900 text-emerald-300 animate-pulse">
             ACTIVE
           </span>
+          <span v-if="flight.is_retrospective" class="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-700 text-slate-400">
+            Manual
+          </span>
         </div>
 
         <p class="text-sm font-semibold text-slate-100 truncate">

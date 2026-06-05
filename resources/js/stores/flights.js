@@ -66,6 +66,50 @@ export const useFlightsStore = defineStore('flights', {
             return flight;
         },
 
+        /** Save a completed past flight to IndexedDB immediately (works offline). */
+        async logPastFlight(data) {
+            const startedAt = new Date(`${data.flight_date}T${data.flight_time}`).toISOString();
+            const durationMinutes = data.duration_minutes ? Number(data.duration_minutes) : null;
+            const endedAt = durationMinutes
+                ? new Date(new Date(startedAt).getTime() + durationMinutes * 60000).toISOString()
+                : null;
+
+            const flight = {
+                client_uuid:                uuidv4(),
+                drone_id:                   data.drone_id ?? null,
+                battery_id:                 data.battery_id ?? null,
+                battery_pct_start:          data.battery_pct_start ?? null,
+                battery_pct_end:            data.battery_pct_end ?? null,
+                started_at:                 startedAt,
+                ended_at:                   endedAt,
+                duration_minutes:           durationMinutes,
+                lat:                        data.lat ?? null,
+                lng:                        data.lng ?? null,
+                location_description:       data.location_description ?? null,
+                flight_plan:                data.flight_plan ?? null,
+                purpose:                    data.purpose ?? 'recreational',
+                purpose_notes:              data.purpose_notes ?? null,
+                laanc_status:               data.laanc_status ?? 'na',
+                laanc_authorization_number: data.laanc_authorization_number ?? null,
+                post_flight_notes:          data.post_flight_notes ?? null,
+                is_retrospective:           true,
+                accessories:                JSON.parse(JSON.stringify(data.accessories ?? [])),
+                checklist:                  [],
+                synced:                     0,
+                server_id:                  null,
+            };
+
+            const id = await db.flights.add(flight);
+            flight.id = id;
+
+            this.recentFlights.unshift(flight);
+            this.recentFlights.sort((a, b) => new Date(b.started_at) - new Date(a.started_at));
+
+            registerBackgroundSync();
+
+            return flight;
+        },
+
         /** Update checklist entries on the current flight (still in IndexedDB). */
         async updateChecklist(flightId, checklist) {
             await db.flights.update(flightId, { checklist, synced: 0 });

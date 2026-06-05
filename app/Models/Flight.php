@@ -31,6 +31,7 @@ class Flight extends Model
         'laanc_status',
         'laanc_authorization_number',
         'post_flight_notes',
+        'is_retrospective',
         'synced_at',
     ];
 
@@ -40,8 +41,9 @@ class Flight extends Model
         'synced_at'    => 'datetime',
         'lat'          => 'decimal:7',
         'lng'          => 'decimal:7',
-        'purpose'      => PurposeEnum::class,
-        'laanc_status' => LaancStatusEnum::class,
+        'purpose'          => PurposeEnum::class,
+        'laanc_status'     => LaancStatusEnum::class,
+        'is_retrospective' => 'boolean',
     ];
 
     public function team(): BelongsTo

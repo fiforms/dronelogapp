@@ -34,6 +34,7 @@ class FlightResource extends JsonResource
             'laanc_status'               => $this->laanc_status?->value,
             'laanc_authorization_number' => $this->laanc_authorization_number,
             'post_flight_notes'          => $this->post_flight_notes,
+            'is_retrospective'           => (bool) $this->is_retrospective,
             'checklist'                  => FlightChecklistResource::collection($this->whenLoaded('checklistEntries')),
             'synced_at'                  => $this->synced_at?->toIso8601String(),
             'created_at'                 => $this->created_at,

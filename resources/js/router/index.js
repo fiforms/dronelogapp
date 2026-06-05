@@ -6,6 +6,7 @@ const routes = [
     { path: '/',                       component: () => import('../views/DashboardView.vue'),           meta: { auth: true } },
     { path: '/flights',                component: () => import('../views/FlightListView.vue'),          meta: { auth: true } },
     { path: '/flights/start',          component: () => import('../views/FlightStartView.vue'),         meta: { auth: true } },
+    { path: '/flights/log',            component: () => import('../views/LogPastFlightView.vue'),        meta: { auth: true } },
     { path: '/flights/:id/active',     component: () => import('../views/FlightActiveView.vue'),        meta: { auth: true } },
     { path: '/flights/:id/end',        component: () => import('../views/FlightEndView.vue'),           meta: { auth: true } },
     { path: '/flights/:id',            component: () => import('../views/FlightDetailView.vue'),        meta: { auth: true } },

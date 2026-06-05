@@ -34,6 +34,7 @@ class SyncController extends Controller
             'flights.*.laanc_status'                => ['required', 'in:received,not_needed,na'],
             'flights.*.laanc_authorization_number'  => ['nullable', 'string'],
             'flights.*.post_flight_notes'           => ['nullable', 'string'],
+            'flights.*.is_retrospective'            => ['nullable', 'boolean'],
             'flights.*.accessories'                 => ['nullable', 'array'],
             'flights.*.checklist'                   => ['nullable', 'array'],
         ]);

@@ -32,6 +32,7 @@ class StoreFlightRequest extends FormRequest
             'laanc_status'                  => ['required', 'in:received,not_needed,na'],
             'laanc_authorization_number'    => ['nullable', 'string', 'max:50'],
             'post_flight_notes'             => ['nullable', 'string'],
+            'is_retrospective'              => ['boolean'],
             'accessories'                   => ['nullable', 'array'],
             'accessories.*'                 => ['integer', 'exists:accessories,id'],
             'checklist'                     => ['nullable', 'array'],
