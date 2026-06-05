@@ -123,8 +123,11 @@
           <option value="not_needed">Not Needed (waived or exempt)</option>
           <option value="received">LAANC Authorization Received</option>
         </select>
-        <input v-if="form.laanc_status === 'received'" v-model="form.laanc_authorization_number"
-          type="text" class="input-field mt-2" placeholder="Authorization number" />
+        <div v-if="form.laanc_status === 'received'" class="flex gap-2 mt-2">
+          <input v-model="form.laanc_authorization_number"
+            type="text" class="input-field flex-1" placeholder="Authorization number" />
+          <button type="button" @click="pasteLaanc" class="btn-secondary px-3 text-sm shrink-0">Paste</button>
+        </div>
       </div>
 
       <!-- Post-flight notes -->
@@ -211,6 +214,12 @@ function captureGps() {
     },
     { enableHighAccuracy: true, timeout: 10000 }
   );
+}
+
+async function pasteLaanc() {
+  const text = await navigator.clipboard.readText();
+  const match = text.match(/\bAuthorization\s+([A-Z0-9]{10,})\b/) || text.match(/^LAANC\s+([A-Z0-9]{10,})/m);
+  if (match) form.laanc_authorization_number = match[1];
 }
 
 async function save() {
