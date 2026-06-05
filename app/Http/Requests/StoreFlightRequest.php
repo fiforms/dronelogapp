@@ -33,12 +33,20 @@ class StoreFlightRequest extends FormRequest
             'laanc_authorization_number'    => ['nullable', 'string', 'max:50'],
             'post_flight_notes'             => ['nullable', 'string'],
             'is_retrospective'              => ['boolean'],
+            'battery_pct_end'               => ['nullable', 'integer', 'between:0,100'],
+            'duration_minutes'              => ['nullable', 'integer', 'min:0'],
             'accessories'                   => ['nullable', 'array'],
             'accessories.*'                 => ['integer', 'exists:accessories,id'],
             'checklist'                     => ['nullable', 'array'],
             'checklist.*.checklist_item_id' => ['required', 'integer', 'exists:checklist_items,id'],
             'checklist.*.checked'           => ['required', 'boolean'],
             'checklist.*.comment'           => ['nullable', 'string', 'max:1000'],
+            'status'                        => ['nullable', 'in:flown,aborted,deleted'],
+            'risk_scores'                   => ['nullable', 'array'],
+            'risk_scores.*.risk_item_id'    => ['nullable', 'integer', 'exists:risk_items,id'],
+            'risk_scores.*.label'           => ['required', 'string', 'max:255'],
+            'risk_scores.*.score'           => ['required', 'integer', 'between:0,3'],
+            'risk_scores.*.mitigation_notes' => ['nullable', 'string', 'max:2000'],
         ];
     }
 }

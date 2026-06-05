@@ -7,7 +7,10 @@
             :class="flight.purpose === 'commercial' ? 'bg-amber-900 text-amber-300' : 'bg-blue-900 text-blue-300'">
             {{ flight.purpose === 'commercial' ? 'Commercial' : 'Recreational' }}
           </span>
-          <span v-if="!flight.ended_at" class="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-900 text-emerald-300 animate-pulse">
+          <span v-if="flight.status === 'aborted'" class="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-900 text-amber-300">
+            Not Flown
+          </span>
+          <span v-else-if="!flight.ended_at" class="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-900 text-emerald-300 animate-pulse">
             ACTIVE
           </span>
           <span v-if="flight.is_retrospective" class="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-700 text-slate-400">

@@ -38,8 +38,10 @@ export async function syncPendingFlights(axiosInstance = axios) {
         laanc_status:               f.laanc_status,
         laanc_authorization_number: f.laanc_authorization_number ?? null,
         post_flight_notes:          f.post_flight_notes ?? null,
+        status:                     f.status ?? 'flown',
         accessories:                f.accessories ?? [],
         checklist:                  f.checklist ?? [],
+        risk_scores:                f.risk_scores ?? [],
     }));
 
     try {
@@ -65,23 +67,26 @@ export async function syncPendingFlights(axiosInstance = axios) {
  */
 export async function syncFleetFromServer(axiosInstance = axios) {
     try {
-        const [drones, batteries, accessories, templates] = await Promise.all([
+        const [drones, batteries, accessories, templates, riskItems] = await Promise.all([
             axiosInstance.get('/api/v1/drones').then((r) => r.data.data),
             axiosInstance.get('/api/v1/batteries').then((r) => r.data.data),
             axiosInstance.get('/api/v1/accessories').then((r) => r.data.data),
             axiosInstance.get('/api/v1/checklist-templates').then((r) => r.data.data),
+            axiosInstance.get('/api/v1/risk-items').then((r) => r.data.data),
         ]);
 
-        await db.transaction('rw', db.drones, db.batteries, db.accessories, db.checklist_templates, db.checklist_items, async () => {
+        await db.transaction('rw', db.drones, db.batteries, db.accessories, db.checklist_templates, db.checklist_items, db.risk_items, async () => {
             await db.drones.clear();
             await db.batteries.clear();
             await db.accessories.clear();
             await db.checklist_templates.clear();
             await db.checklist_items.clear();
+            await db.risk_items.clear();
 
             await db.drones.bulkPut(drones.map((d) => ({ ...d, server_id: d.id })));
             await db.batteries.bulkPut(batteries.map((b) => ({ ...b, server_id: b.id })));
             await db.accessories.bulkPut(accessories.map((a) => ({ ...a, server_id: a.id })));
+            await db.risk_items.bulkPut(riskItems.map((r) => ({ ...r, server_id: r.id })));
 
             for (const t of templates) {
                 await db.checklist_templates.put({ ...t, server_id: t.id });

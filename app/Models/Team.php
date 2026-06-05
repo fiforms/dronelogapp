@@ -41,4 +41,9 @@ class Team extends Model
     {
         return $this->hasMany(Flight::class);
     }
+
+    public function riskItems(): HasMany
+    {
+        return $this->hasMany(RiskItem::class);
+    }
 }

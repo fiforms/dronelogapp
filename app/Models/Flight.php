@@ -32,6 +32,7 @@ class Flight extends Model
         'laanc_authorization_number',
         'post_flight_notes',
         'is_retrospective',
+        'status',
         'synced_at',
     ];
 
@@ -74,5 +75,10 @@ class Flight extends Model
     public function checklistEntries(): HasMany
     {
         return $this->hasMany(FlightChecklist::class);
+    }
+
+    public function riskScores(): HasMany
+    {
+        return $this->hasMany(FlightRiskScore::class);
     }
 }

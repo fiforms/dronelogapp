@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\DefaultChecklistItem;
+use App\Models\DefaultRiskItem;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
@@ -38,6 +39,7 @@ class RegisteredUserController extends Controller
         $team = Team::create(['name' => "{$user->name}'s Team"]);
         $team->users()->attach($user, ['role' => 'owner']);
         DefaultChecklistItem::seedTeam($team);
+        DefaultRiskItem::seedTeam($team);
 
         event(new Registered($user));
 

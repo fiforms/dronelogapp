@@ -2,6 +2,94 @@
   <div class="max-w-2xl mx-auto px-4 py-6 space-y-6">
     <h1 class="text-xl font-bold">Settings</h1>
 
+    <!-- Risk Assessment threshold -->
+    <div class="card space-y-3">
+      <h2 class="section-title">Flight Risk Assessment</h2>
+      <p class="text-sm text-slate-400">
+        Set the total risk score threshold above which you will be prompted to reconsider a flight.
+        Scores range from 0–3 per factor. A score of 3 on any single factor always shows a
+        "Do Not Fly" warning regardless of this setting.
+      </p>
+      <div class="flex items-center gap-4">
+        <label class="label mb-0 shrink-0">Caution Threshold</label>
+        <input
+          v-model.number="riskThreshold"
+          type="number"
+          min="1"
+          max="24"
+          class="input-field w-24 text-center"
+        />
+        <button class="btn-primary" style="width:auto;padding-left:1.25rem;padding-right:1.25rem"
+          :disabled="thresholdSaving" @click="saveThreshold">
+          {{ thresholdSaving ? 'Saving…' : thresholdSaved ? 'Saved ✓' : 'Save' }}
+        </button>
+      </div>
+      <p class="text-xs text-slate-500">
+        Default is 6. With 8 risk factors, a score of 6 averages 0.75 per item.
+      </p>
+    </div>
+
+    <!-- Risk item management -->
+    <div class="card space-y-3">
+      <div class="flex items-center justify-between">
+        <h2 class="section-title">Risk Factors</h2>
+        <button class="btn-secondary text-sm px-3 py-1.5" style="width:auto" @click="openRiskForm()">
+          + Add Factor
+        </button>
+      </div>
+      <p class="text-sm text-slate-400">
+        These factors appear in the risk assessment step of every new flight. Disable a factor to
+        hide it without losing its label.
+      </p>
+
+      <div v-if="riskStore.items.length" class="space-y-2">
+        <div v-for="item in riskStore.items" :key="item.id"
+          class="flex items-start gap-3 py-2 border-b border-slate-700 last:border-0">
+          <div class="flex-1 min-w-0">
+            <p :class="item.is_active === false ? 'text-slate-500 line-through' : 'text-slate-200'" class="text-sm font-medium">
+              {{ item.label }}
+            </p>
+            <p v-if="item.description" class="text-xs text-slate-500 mt-0.5 leading-snug">
+              {{ item.description }}
+            </p>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button class="text-xs text-blue-400 hover:text-blue-300" @click="openRiskForm(item)">Edit</button>
+            <button v-if="item.is_active !== false" class="text-xs text-slate-500 hover:text-amber-400"
+              @click="riskStore.remove(item.id)">Disable</button>
+            <button v-else class="text-xs text-slate-500 hover:text-emerald-400"
+              @click="riskStore.save({ id: item.id, is_active: true })">Enable</button>
+          </div>
+        </div>
+      </div>
+      <p v-else class="text-slate-500 text-sm text-center py-4">No risk factors yet.</p>
+    </div>
+
+    <!-- Risk factor form modal -->
+    <Teleport to="body">
+      <div v-if="showRiskForm" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
+        <div class="card max-w-md w-full space-y-4">
+          <h3 class="section-title">{{ riskForm.id ? 'Edit Risk Factor' : 'Add Risk Factor' }}</h3>
+          <div>
+            <label class="label">Label</label>
+            <input v-model="riskForm.label" type="text" class="input-field" placeholder="e.g. Weather" />
+          </div>
+          <div>
+            <label class="label">Description <span class="text-slate-500 font-normal">(shown as helper text)</span></label>
+            <textarea v-model="riskForm.description" rows="3" class="input-field text-sm"
+              placeholder="Brief guidance on how to score this factor…" />
+          </div>
+          <div class="flex gap-3 pt-1">
+            <button class="btn-secondary" style="flex:1" @click="showRiskForm = false">Cancel</button>
+            <button class="btn-primary" style="flex:1" :disabled="riskSaving || !riskForm.label"
+              @click="saveRiskItem">
+              {{ riskSaving ? 'Saving…' : 'Save' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <!-- Backup -->
     <div class="card space-y-3">
       <h2 class="section-title">Backup</h2>
@@ -96,8 +184,54 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import axios from 'axios';
+import { useRiskItemsStore } from '../stores/riskItems';
+
+const riskStore       = useRiskItemsStore();
+const riskThreshold   = ref(6);
+const thresholdSaving = ref(false);
+const thresholdSaved  = ref(false);
+
+onMounted(async () => {
+  await riskStore.fetchAll();
+  riskThreshold.value = await riskStore.fetchThreshold();
+});
+
+async function saveThreshold() {
+  thresholdSaving.value = true;
+  thresholdSaved.value  = false;
+  try {
+    riskThreshold.value = await riskStore.saveThreshold(riskThreshold.value);
+    thresholdSaved.value = true;
+    setTimeout(() => { thresholdSaved.value = false; }, 2000);
+  } finally {
+    thresholdSaving.value = false;
+  }
+}
+
+// --- Risk item form ---
+const showRiskForm = ref(false);
+const riskSaving   = ref(false);
+const riskForm     = ref({ id: null, label: '', description: '' });
+
+function openRiskForm(item = null) {
+  riskForm.value    = item
+    ? { id: item.id, label: item.label, description: item.description ?? '' }
+    : { id: null, label: '', description: '' };
+  showRiskForm.value = true;
+}
+
+async function saveRiskItem() {
+  if (!riskForm.value.label.trim()) return;
+  riskSaving.value = true;
+  try {
+    await riskStore.save(riskForm.value);
+    showRiskForm.value = false;
+  } finally {
+    riskSaving.value = false;
+  }
+}
 
 // --- Backup ---
 const backupLoading = ref(false);

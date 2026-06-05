@@ -7,7 +7,9 @@ use App\Http\Controllers\Api\ChecklistItemController;
 use App\Http\Controllers\Api\ChecklistTemplateController;
 use App\Http\Controllers\Api\DroneController;
 use App\Http\Controllers\Api\FlightController;
+use App\Http\Controllers\Api\RiskItemController;
 use App\Http\Controllers\Api\SyncController;
+use App\Http\Controllers\Api\UserSettingsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -31,4 +33,9 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
     Route::get('backup', [BackupController::class, 'export']);
     Route::post('backup/restore', [BackupController::class, 'restore']);
+
+    Route::apiResource('risk-items', RiskItemController::class)->only(['index', 'store', 'update', 'destroy']);
+
+    Route::get('settings', [UserSettingsController::class, 'show']);
+    Route::patch('settings', [UserSettingsController::class, 'update']);
 });

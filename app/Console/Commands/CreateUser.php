@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Console\Commands\Concerns\PromptsForPassword;
 use App\Models\DefaultChecklistItem;
+use App\Models\DefaultRiskItem;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Console\Command;
@@ -43,6 +44,7 @@ class CreateUser extends Command
         $team = Team::create(['name' => "{$user->name}'s Team"]);
         $team->users()->attach($user, ['role' => 'owner']);
         DefaultChecklistItem::seedTeam($team);
+        DefaultRiskItem::seedTeam($team);
 
         $this->info("Created user {$email} with team \"{$team->name}\".");
         return self::SUCCESS;

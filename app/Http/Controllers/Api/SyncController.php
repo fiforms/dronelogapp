@@ -35,8 +35,10 @@ class SyncController extends Controller
             'flights.*.laanc_authorization_number'  => ['nullable', 'string'],
             'flights.*.post_flight_notes'           => ['nullable', 'string'],
             'flights.*.is_retrospective'            => ['nullable', 'boolean'],
+            'flights.*.status'                      => ['nullable', 'in:flown,aborted,deleted'],
             'flights.*.accessories'                 => ['nullable', 'array'],
             'flights.*.checklist'                   => ['nullable', 'array'],
+            'flights.*.risk_scores'                 => ['nullable', 'array'],
         ]);
 
         $team    = $request->user()->currentTeam();
@@ -49,7 +51,8 @@ class SyncController extends Controller
             try {
                 $accessories = $payload['accessories'] ?? [];
                 $checklist   = $payload['checklist'] ?? [];
-                unset($payload['accessories'], $payload['checklist']);
+                $riskScores  = $payload['risk_scores'] ?? [];
+                unset($payload['accessories'], $payload['checklist'], $payload['risk_scores']);
 
                 $flight = Flight::updateOrCreate(
                     ['client_uuid' => $payload['client_uuid']],
@@ -68,6 +71,16 @@ class SyncController extends Controller
                     $flight->checklistEntries()->updateOrCreate(
                         ['checklist_item_id' => $entry['checklist_item_id']],
                         ['checked' => $entry['checked'], 'comment' => $entry['comment'] ?? null]
+                    );
+                }
+
+                foreach ($riskScores as $score) {
+                    $flight->riskScores()->updateOrCreate(
+                        ['risk_item_id' => $score['risk_item_id'] ?? null, 'label' => $score['label']],
+                        [
+                            'score'            => $score['score'],
+                            'mitigation_notes' => $score['mitigation_notes'] ?? null,
+                        ]
                     );
                 }
 

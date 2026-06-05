@@ -8,7 +8,8 @@ const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 export const useFlightsStore = defineStore('flights', {
     state: () => ({
-        recentFlights: [],      // last 30 days, from IndexedDB
+        recentFlights: [],      // last 30 days, from IndexedDB (excludes deleted)
+        deletedFlights: [],     // soft-deleted flights from last 30 days
         currentFlight: null,    // active flight (in-progress)
         olderFlights: [],       // loaded on-demand from API
         pagination: { page: 1, total: 0, hasMore: false },
@@ -16,17 +17,23 @@ export const useFlightsStore = defineStore('flights', {
     }),
 
     actions: {
-        /** Load last 30 days of flights from IndexedDB. */
+        /** Load last 30 days of flights from IndexedDB (excludes deleted). */
         async loadRecent() {
             const cutoff = new Date(Date.now() - THIRTY_DAYS_MS).toISOString();
-            this.recentFlights = await db.flights
+            const all = await db.flights
                 .where('started_at')
                 .aboveOrEqual(cutoff)
                 .reverse()
                 .toArray();
 
-            // Find any in-progress flight (no ended_at)
-            this.currentFlight = this.recentFlights.find((f) => !f.ended_at) ?? null;
+            // Separate deleted from active (aborted flights stay visible)
+            this.recentFlights = all.filter((f) => f.status !== 'deleted');
+            this.deletedFlights = all.filter((f) => f.status === 'deleted');
+
+            // Find any in-progress flight (no ended_at, not aborted/deleted)
+            this.currentFlight = this.recentFlights.find(
+                (f) => !f.ended_at && f.status === 'flown'
+            ) ?? null;
         },
 
         /** Save a new flight to IndexedDB immediately (works offline). */
@@ -49,8 +56,10 @@ export const useFlightsStore = defineStore('flights', {
                 laanc_status:               data.laanc_status ?? 'na',
                 laanc_authorization_number: data.laanc_authorization_number ?? null,
                 post_flight_notes:          null,
+                status:                     'flown',
                 accessories:                JSON.parse(JSON.stringify(data.accessories ?? [])),
                 checklist:                  JSON.parse(JSON.stringify(data.checklist ?? [])),
+                risk_scores:                JSON.parse(JSON.stringify(data.risk_scores ?? [])),
                 synced:                     0,
                 server_id:                  null,
             };
@@ -161,6 +170,53 @@ export const useFlightsStore = defineStore('flights', {
             // Fall back to API
             const { data } = await axios.get(`/api/v1/flights/${id}`);
             return data.data;
+        },
+
+        /** Log a flight as aborted (considered but not flown). */
+        async abortFlight(flightId, { risk_scores } = {}) {
+            const update = {
+                ended_at: new Date().toISOString(),
+                status:   'aborted',
+                synced:   0,
+            };
+            if (risk_scores !== undefined) update.risk_scores = JSON.parse(JSON.stringify(risk_scores));
+            await db.flights.update(flightId, update);
+
+            const flight = this.recentFlights.find((f) => f.id === flightId);
+            if (flight) Object.assign(flight, update);
+            if (this.currentFlight?.id === flightId) this.currentFlight = null;
+
+            registerBackgroundSync();
+        },
+
+        /** Soft-delete a flight (hides from normal view, keeps for records). */
+        async deleteFlight(flightId) {
+            const update = { status: 'deleted', synced: 0 };
+            await db.flights.update(flightId, update);
+
+            const flight = this.recentFlights.find((f) => f.id === flightId);
+            if (flight) {
+                this.recentFlights = this.recentFlights.filter((f) => f.id !== flightId);
+                this.deletedFlights.unshift({ ...flight, ...update });
+            }
+            if (this.currentFlight?.id === flightId) this.currentFlight = null;
+
+            registerBackgroundSync();
+        },
+
+        /** Restore a soft-deleted flight back to flown status. */
+        async restoreFlight(flightId) {
+            const update = { status: 'flown', synced: 0 };
+            await db.flights.update(flightId, update);
+
+            const flight = this.deletedFlights.find((f) => f.id === flightId);
+            if (flight) {
+                this.deletedFlights = this.deletedFlights.filter((f) => f.id !== flightId);
+                this.recentFlights.unshift({ ...flight, ...update });
+                this.recentFlights.sort((a, b) => new Date(b.started_at) - new Date(a.started_at));
+            }
+
+            registerBackgroundSync();
         },
 
         /** Fetch older (>30 day) flights from the API. Online only. */
