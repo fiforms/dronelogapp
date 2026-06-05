@@ -1,6 +1,11 @@
 <template>
   <div class="max-w-2xl mx-auto px-4 py-6 space-y-4">
-    <h1 class="text-xl font-bold">Flight Log</h1>
+    <div class="flex items-center justify-between">
+      <h1 class="text-xl font-bold">Flight Log</h1>
+      <button class="btn-secondary text-sm px-3 py-1.5" :disabled="allFlights.length === 0" @click="doExport">
+        Export CSV
+      </button>
+    </div>
 
     <!-- Recent (30 days, from IndexedDB) -->
     <div>
@@ -33,10 +38,13 @@
 <script setup>
 import { computed, onMounted } from 'vue';
 import { useFlightsStore } from '../stores/flights';
+import { useFleetStore } from '../stores/fleet';
 import { useSyncStore } from '../stores/sync';
 import FlightCard from '../components/FlightCard.vue';
+import { exportFlightsCsv } from '../utils/exportCsv';
 
 const flights = useFlightsStore();
+const fleet = useFleetStore();
 const sync = useSyncStore();
 
 const recentFlights = computed(() =>
@@ -44,6 +52,16 @@ const recentFlights = computed(() =>
     new Date(b.started_at) - new Date(a.started_at)
   )
 );
+
+const allFlights = computed(() =>
+  [...recentFlights.value, ...flights.olderFlights].sort((a, b) =>
+    new Date(b.started_at) - new Date(a.started_at)
+  )
+);
+
+function doExport() {
+  exportFlightsCsv(allFlights.value, { drones: fleet.drones, batteries: fleet.batteries });
+}
 
 function loadMore() {
   flights.loadOlderFlights(flights.pagination.page + 1);
@@ -53,6 +71,9 @@ onMounted(async () => {
   await flights.loadRecent();
   if (sync.online) {
     await flights.loadOlderFlights(1);
+    if (!fleet.loaded) await fleet.fetchAll();
+  } else if (!fleet.loaded) {
+    await fleet.loadFromIndexedDB();
   }
 });
 </script>
